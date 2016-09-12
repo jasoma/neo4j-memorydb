@@ -1,0 +1,70 @@
+import de.undercouch.gradle.tasks.download.Download
+
+plugins {
+    id 'java'
+    id "de.undercouch.download" version "3.1.1"
+}
+
+ext {
+    neoVersion = '3.0.4'
+}
+
+group 'com.github.jasoma'
+version "$neoVersion"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.neo4j', name: 'neo4j-kernel', version: neoVersion
+    compile group: 'org.neo4j', name: 'neo4j-io', version: neoVersion
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.neo4j', name: 'neo4j-lucene-index', version: neoVersion
+    testCompile group: 'org.neo4j', name: 'neo4j-cypher', version: neoVersion
+}
+
+task cleanCopiedSource(type: Delete) {
+    delete 'src/main/java/org'
+}
+clean.dependsOn << cleanCopiedSource
+
+task downloadNeo4jTestSource(type: Download) {
+    def jars = ["neo4j-kernel-$neoVersion-test-sources.jar", "neo4j-io-$neoVersion-test-sources.jar"]
+    src([
+            "https://repo1.maven.org/maven2/org/neo4j/neo4j-kernel/$neoVersion/${jars[0]}",
+            "https://repo1.maven.org/maven2/org/neo4j/neo4j-io/$neoVersion/${jars[1]}"
+    ])
+    dest 'build/temp'
+    onlyIf {
+        jars.every { p -> !(new File("build/temp", p).exists()) }
+    }
+}
+
+task extractKernalSources(type: Copy, dependsOn: 'downloadNeo4jTestSource') {
+    from zipTree("build/temp/neo4j-kernel-$neoVersion-test-sources.jar")
+    into 'build/temp/neo-source'
+}
+
+task extractIoSources(type: Copy, dependsOn: 'downloadNeo4jTestSource') {
+    from zipTree("build/temp/neo4j-io-$neoVersion-test-sources.jar")
+    into 'build/temp/neo-source'
+}
+
+task copyInMemoryDatabaseClasses(type: Copy, dependsOn: ['extractKernalSources', 'extractIoSources', 'cleanCopiedSource']) {
+    from fileTree(dir: 'build/temp/neo-source', includes: [
+            '**/TestGraphDatabaseFactory.java',
+            '**/ImpermanentGraphDatabase.java',
+            '**/TestGraphDatabaseBuilder.java',
+            '**/TestGraphDatabaseFactoryState.java',
+            '**/GraphDatabaseServiceCleaner.java',
+            'org/neo4j/graphdb/mockfs/*.java',
+            'org/neo4j/test/impl/*.java',
+    ])
+    into 'src/main/java'
+    exclude '**/*Test.java'
+    includeEmptyDirs = false
+}
+compileJava.dependsOn << copyInMemoryDatabaseClasses
+
