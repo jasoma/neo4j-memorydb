@@ -3,6 +3,7 @@ import de.undercouch.gradle.tasks.download.Download
 plugins {
     id 'java'
     id 'maven'
+    id 'signing'
     id "de.undercouch.download" version "3.1.1"
 }
 
@@ -48,6 +49,55 @@ artifacts {
     archives sourcesJar
     archives javadocJar
 }
+
+signing {
+    sign configurations.archives
+}
+
+def publishUrl() {
+    if (project.version.endsWith('SNAPSHOT')) {
+        'https://oss.sonatype.org/content/repositories/snapshots'
+    } else {
+        'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { deployment -> signing.signPom(deployment) }
+            repository(url: publishUrl()) {
+                authentication(userName: project.property('ossrhUser'), password: project.property('ossrhPassword'))
+            }
+            pom.project {
+                name 'neo4j-memorydb'
+                description 'Repackaging of the in-memory database classes from Neo4j'
+                url 'https://github.com/jasoma/neo4j-memorydb'
+                scm {
+                    connection 'scm:git:https://github.com/jasoma/neo4j-memorydb.git'
+                    developerConnection 'scm:git:git@github.com:jasoma/neo4j-memorydb.git'
+                    url 'https://github.com/jasoma/neo4j-memorydb.git'
+                }
+                licenses {
+                    license {
+                        name 'The MIT License (MIT)'
+                        url 'http://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'jasoma'
+                        name 'Jason Maher'
+                        email 'jason@jasonmaher.me'
+                    }
+                }
+            }
+        }
+    }
+}
+
+task release(dependsOn: ['build', 'uploadArchives'])
 
 task cleanCopiedSource(type: Delete) {
     delete 'src/main/java/org'
