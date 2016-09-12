@@ -25,6 +25,14 @@ dependencies {
     testCompile group: 'org.neo4j', name: 'neo4j-cypher', version: neoVersion
 }
 
+test {
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams true
+    }
+}
+
 task cleanCopiedSource(type: Delete) {
     delete 'src/main/java/org'
 }
