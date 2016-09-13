@@ -1,8 +1,34 @@
 # neo4j-memorydb
 
 A repackaging of the in-memory database classes from Neo4j. This avoids the need to depend on the test 
-artifacts from the Neo4j project. Usage and examples from the main project can be found here: 
-http://neo4j.com/docs/stable/tutorials-java-unit-testing.html
+artifacts from the Neo4j project.
+
+## Setup
+
+**Gradle**
+
+```gradle
+dependencies {
+    compile group: 'com.github.jasoma', name: 'neo4j-memorydb', version: neoVersion
+}
+```
+
+**Maven**
+
+```xml
+<dependency> 
+   <groupId>com.github.jasoma</groupId>
+   <artifactId>neo4j-memorydb</artifactId>   
+   <version>${neoVersion}</version>
+</dependency>
+```
+
+## Usage
+
+As this is just a repackaging all examples from the main project remain valid, simply use the alternative dependencies shown above.
+
+Usage and examples from the main project can be found here: http://neo4j.com/docs/stable/tutorials-java-unit-testing.html
+
 
 ## Gotchas
 
@@ -16,14 +42,10 @@ Both of these are due to neo4j looking up components at runtime. Both can be sol
 
 ```gradle
 dependencies {
-    // (...)
-    
     // adds an index provider for error [1]
-    testCompile group: 'org.neo4j', name: 'neo4j-lucene-index', version: neoVersion
+    compile group: 'org.neo4j', name: 'neo4j-lucene-index', version: neoVersion
     // adds a query engine for error [2]
-    testCompile group: 'org.neo4j', name: 'neo4j-cypher', version: neoVersion
-    
-    // (...)
+    compile group: 'org.neo4j', name: 'neo4j-cypher', version: neoVersion
 }
 ```
 
