@@ -8,7 +8,7 @@ plugins {
 }
 
 ext {
-    neoVersion = '3.0.6'
+    neoVersion = '3.0.7'
 }
 
 group 'com.github.jasoma'
